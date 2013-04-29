@@ -1,5 +1,5 @@
 {
-    "name": "atukai/at-admin",
+    "name": "joacub/at-admin",
     "description": "The missing ZF2 Admin module constructor.",
     "type": "library",
     "keywords": [
@@ -16,7 +16,7 @@
     "require": {
         "zendframework/zendframework": ">=2.1.4",
         "zf-commons/zfc-admin": "0.*",
-        "atukai/at-datagrid": "0.*"
+        "joacub/at-datagrid": "0.*"
     },
     "suggest": {
         "bjyoungblood/bjy-modulus": "For modules management",
