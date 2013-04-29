@@ -15,7 +15,7 @@
     ],
     "require": {
         "zendframework/zendframework": ">=2.1.4",
-        "zf-commons/zfc-admin": "0.*",
+        "zf-commons/zfc-admin": "dev-master",
         "joacub/at-datagrid": "dev-master"
     },
     "suggest": {
