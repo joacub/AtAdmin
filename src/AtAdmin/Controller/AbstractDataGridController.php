@@ -176,8 +176,16 @@ abstract class AbstractDataGridController extends AbstractActionController
 
         
         if(!$grid->getCaption()) {
+        	$partsNamedCollumn = explode('__', $grid->getTitleColumnName());
+        	$partsParsed = array();
+        	$title = $item;
+        	foreach($partsNamedCollumn as $partCollumn) {
+        		$titleColumn = ucfirst($partCollumn);
+        		$title = $title->{"get{$titleColumn}"}();
+        	}
+        		
         	$titleColumn = ucfirst($grid->getTitleColumnName());
-        	$grid->setCaption((string)$item->{"get{$titleColumn}"}());
+        	$grid->setCaption((string) $title);
         }
         
         
