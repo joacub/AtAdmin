@@ -5,10 +5,11 @@ namespace AtAdmin\Controller;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use AtDataGrid\DataGrid\Manager;
+use Zend\Mvc\View\Http\InjectTemplateListener;
 
 abstract class AbstractDataGridController extends AbstractActionController
 {
-    /**
+   /**
      * @return array|\Zend\View\Model\ViewModel
      */
     public function indexAction()
@@ -32,22 +33,41 @@ abstract class AbstractDataGridController extends AbstractActionController
         $grid->setCurrentPage($this->params()->fromQuery('page'));
         $grid->setItemsPerPage($this->params()->fromQuery('show_items'));
 
-        if (!isset($_POST['cmd'])) {
+        if (($cmd = $this->params()->fromPost('cmd', null)) === null) {
             $requestParams = $this->getRequest()->getQuery();
 
             $filtersForm = $grid->getFiltersForm();
+            foreach($filtersForm->getElements() as $e) {
+            	$inputFilter = $filtersForm->getInputFilter()->get($e->getName());
+            	$inputFilter->setAllowEmpty(true);
+            }
+            
             $filtersForm->setData($requestParams);
 
             if ($filtersForm->isValid()) {
                 $grid->applyFilters($filtersForm->getData());
+            } else {
+            	//no ha pasado la validacion
             }
-
+            
             $viewModel = new ViewModel(array('gridManager' => $gridManager));
-	        $viewModel->setTemplate('at-datagrid/grid');
+	        
+	        $this->getEvent()->setResult($viewModel);
+	        $injectTemplateListener  = new InjectTemplateListener();
+	        $injectTemplateListener->injectTemplate($this->getEvent());
+	        $model = $this->getEvent()->getResult();
+	        $originalTemplate = $model->getTemplate();
+	        $originalTemplateBase = dirname($originalTemplate);
+	        
+	        $viewResolver = $this->getServiceLocator()->get('ViewResolver');
+	        
+	        //miramos si existe el original
+	        if(false === $viewResolver->resolve($originalTemplate))
+	        	$viewModel->setTemplate('at-datagrid/grid');
 
             return $viewModel;
         } else {
-            $this->_forward($_POST['cmd']);
+            return $this->forward()->dispatch($this->params('controller'), array('action' => $cmd));
         }
     }
 
@@ -68,18 +88,44 @@ abstract class AbstractDataGridController extends AbstractActionController
         $requestParams = $this->getRequest()->getPost();
 
         $form = $gridManager->getForm();
+        
+        $entityClassName = $grid->getDataSource()->getEntity();
+        $entity = new $entityClassName();
+        
+        if($grid->getDataSource()->isTranslationTable()) {
+        	$entity->setLocale($this->params()->fromQuery('locale', \Locale::getDefault()));
+        
+        	//hacemos esto por si no esta definida la columna locale dentro de la entidad y es una referencia inexistente utilizada internamente
+        	$form->get('locale')->setValue($entity->getLocale());
+        }
+        
+        $form->bind($entity);
         $form->setData($requestParams);
 
-        if ($form->isValid()) {
-            $formData = $this->preSave($form);
-            $itemId = $grid->save($formData);
-            $this->postSave($grid, $itemId);
-
-            $this->backTo()->goBack('Record created.');
+        if ($this->getRequest()->isPost()) {
+	        if ($form->isValid()) {
+	            $formData = $this->preSave($form);
+	            $itemId = $grid->save($formData);
+	            $this->postSave($grid, $itemId);
+	
+	            $this->backTo()->goBack('Item creado');
+	        }
         }
 
         $viewModel = new ViewModel(array('gridManager' => $gridManager));
-        $viewModel->setTemplate('at-datagrid/create');
+        
+        $this->getEvent()->setResult($viewModel);
+        $injectTemplateListener  = new InjectTemplateListener();
+        $injectTemplateListener->injectTemplate($this->getEvent());
+        $model = $this->getEvent()->getResult();
+        $originalTemplate = $model->getTemplate();
+        $originalTemplateBase = dirname($originalTemplate);
+        
+        $viewResolver = $this->getServiceLocator()->get('ViewResolver');
+        
+        //miramos si existe el original
+        if(false === $viewResolver->resolve($originalTemplate))
+        	$viewModel->setTemplate('at-datagrid/create');
 
         return $viewModel;
     }
@@ -94,39 +140,121 @@ abstract class AbstractDataGridController extends AbstractActionController
         $grid = $gridManager->getGrid();
 
         if (!$gridManager->isAllowEdit()) {
-            throw new \Exception('You are not allowed to do this.');
+            throw new \Exception('No se le permite hacer esto.');
         }
 
         $itemId = $this->params('id');
         if (!$itemId) {
-            throw new \Exception('No record found.');
+            throw new \Exception('No se encontró registro.');
         }
 
         $requestParams = $this->getRequest()->getPost();
 
         $form = $gridManager->getForm();
+        
+        $item = $grid->getRow($itemId);
+        
+        if(method_exists($item, 'setLocale')) {
+        	$item->setLocale($this->params()->fromQuery('locale', \Locale::getDefault()));
+        	$grid->getDataSource()->getEm()->refresh($item);
+        	$form->bind($item);
+        	$form->get('locale')->setValue($item->getLocale());
+        
+        }
+        
+        $form->bind($item);
+        
         $form->setData($requestParams);
-
+        
         if ($this->getRequest()->isPost() && $form->isValid()) {
             $data = $this->preSave($form);
             $grid->save($data, $itemId);
             $this->postSave($grid, $itemId);
 
-            $this->backTo()->goBack('Record updated.');
+            return $this->backTo()->goBack('Record updated.');
         }
 
-        $item = $grid->getRow($itemId);
-        $form->setData($item);
+        
+        if(!$grid->getCaption()) {
+        	$titleColumn = ucfirst($grid->getTitleColumnName());
+        	$grid->setCaption((string)$item->{"get{$titleColumn}"}());
+        }
+        
+        
+        $serviceLocator = $this->getServiceLocator()->get('Application');
+        $routeMatch  = $serviceLocator->getMvcEvent()->getRouteMatch();
+        $router      = $serviceLocator->getMvcEvent()->getRouter();
+        $routeMatchName = $routeMatch->getMatchedRouteName();
+        
+        $navigation = $this->getEvent()->getApplication()->getServiceManager()->get('viewrenderer')->getEngine()->plugin('navigation', array('navigation'));
+        
+        $container = $navigation->setContainer('admin_navigation')->getContainer();
+        $container instanceof \Zend\Navigation\Navigation;
+        
+        $container = $container->findOneBy('route',
+        		$routeMatchName);
+        
+        if($container) {
+        	$container = $container->findOneBy('params', array('action' => 'list'));
+        }
+        
+        if($container) {
+        	$container instanceof \Zend\Navigation\Page\Mvc;
+        	$pages = new \Zend\Navigation\Page\Mvc(
+        			array(
+        				'label' => $grid->getCaption(),
+        				'route' => $routeMatchName,
+        				'params' => array(
+        					'action' => 'edit',
+        					'id' => $this->params('id')
+        				),
+        				'visible' => false
+        			));
+        
+        
+        	$pages->setRouteMatch($routeMatch);
+        	$pages->setDefaultRouter($router);
+        
+        	$container->addPage($pages);
+        }
 
         //$currentPanel = $this->getRequest()->getParam('panel');
         //$this->view->panel = $currentPanel;
 
-        $viewModel = new ViewModel(array(
+        $varsModel = array(
             'gridManager' => $gridManager,
             'item'        => $item,
             'backUrl'     => $this->backTo()->getBackUrl(false)
-        ));
-        $viewModel->setTemplate('at-datagrid/edit');
+        );
+        $viewModel = new ViewModel($varsModel);
+        
+        $this->getEvent()->setResult($viewModel);
+        $injectTemplateListener  = new InjectTemplateListener();
+        $injectTemplateListener->injectTemplate($this->getEvent());
+        $model = $this->getEvent()->getResult();
+        $originalTemplate = $model->getTemplate();
+        $originalTemplateBase = dirname($originalTemplate);
+        
+        $viewResolver = $this->getServiceLocator()->get('ViewResolver');
+        
+        //miramos si existe el original
+        if(false === $viewResolver->resolve($originalTemplate))
+        	$viewModel->setTemplate('at-datagrid/edit');
+        
+        //sumary panels
+        $viewPanelSumary = new ViewModel($varsModel);
+        $viewPanelSumary->setTemplate($originalTemplateBase . '/panels/summary');
+        if(false === $viewResolver->resolve($viewPanelSumary->getTemplate()))
+        	$viewPanelSumary->setTemplate('at-datagrid/panels/summary');
+        
+        //formulario
+        $viewForm = new ViewModel($varsModel);
+        $viewForm->setTemplate($originalTemplateBase . '/form');
+        if(false === $viewResolver->resolve($viewForm->getTemplate()))
+        	$viewForm->setTemplate('at-datagrid/form');
+        
+        $viewModel->addChild($viewPanelSumary, 'viewPanelsSumary')
+        ->addChild($viewForm, 'viewForm');
 
         return $viewModel;
     }
@@ -143,13 +271,16 @@ abstract class AbstractDataGridController extends AbstractActionController
             throw new \Exception('You are not allowed to do this.');
         }
 
-        $itemId = $this->params('id');
+        $itemId = $this->params()->fromPost('items', $this->params('id'));
         if (!$itemId) {
             throw new \Exception('No record found.');
         }
 
-        $grid->delete($itemId);
-        $this->backTo()->goBack('Record deleted.');
+        foreach((array) $itemId as $id) {
+        	$grid->delete($id);
+        }
+        
+        return $this->backTo()->goBack('Record deleted.');
     }
 
     /**
