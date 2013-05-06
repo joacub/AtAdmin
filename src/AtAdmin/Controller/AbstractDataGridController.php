@@ -6,6 +6,7 @@ use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use AtDataGrid\DataGrid\Manager;
 use Zend\Mvc\View\Http\InjectTemplateListener;
+use Nette\Diagnostics\Debugger;
 
 abstract class AbstractDataGridController extends AbstractActionController
 {
@@ -176,15 +177,13 @@ abstract class AbstractDataGridController extends AbstractActionController
 
         
         if(!$grid->getCaption()) {
-        	$partsNamedCollumn = explode('__', $grid->getTitleColumnName());
-        	$partsParsed = array();
         	$title = $item;
-        	foreach($partsNamedCollumn as $partCollumn) {
-        		$titleColumn = ucfirst($partCollumn);
-        		$title = $title->{"get{$titleColumn}"}();
+        	if($parent = $grid->getTitleColumnName()->getParent()) {
+        		$title = $title->{"get{$parent->getName()}"}()->{"get{$grid->getTitleColumnName()->getName()}"}();
+        	} else {
+        		$title = $title->{"get{$grid->getTitleColumnName()->getName()}"}();
         	}
-        		
-        	$titleColumn = ucfirst($grid->getTitleColumnName());
+        	
         	$grid->setCaption((string) $title);
         }
         
