@@ -106,11 +106,11 @@ abstract class AbstractDataGridController extends AbstractActionController
         if ($this->getRequest()->isPost()) {
 	        if ($form->isValid()) {
 	            $formData = $this->preSave($form);
-	            $itemId = $grid->save($formData);
+	            $itemId = $grid->save($this->getEventManager(), $formData);
 	            $this->postSave($grid, $itemId);
 	
 	            $this->backTo()->goBack('Item creado');
-	        }
+	        } 
         }
 
         $viewModel = new ViewModel(array('gridManager' => $gridManager));
@@ -169,7 +169,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         if ($this->getRequest()->isPost() && $form->isValid()) {
             $data = $this->preSave($form);
-            $grid->save($data, $itemId);
+            $grid->save($this->getEventManager(), $data, $itemId);
             $this->postSave($grid, $itemId);
 
             return $this->backTo()->goBack('Record updated.');
@@ -178,7 +178,8 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         if(!$grid->getCaption()) {
         	$title = $item;
-        	if($parent = $grid->getTitleColumnName()->getParent()) {
+        	if(property_exists($grid->getTitleColumnName(), 'getParent')) {
+        		$parent = $grid->getTitleColumnName()->getParent();
         		$title = $title->{"get{$parent->getName()}"}()->{"get{$grid->getTitleColumnName()->getName()}"}();
         	} else {
         		$title = $title->{"get{$grid->getTitleColumnName()->getName()}"}();
@@ -300,6 +301,8 @@ abstract class AbstractDataGridController extends AbstractActionController
     public function preSave($form)
     {
         $data = $form->getData();
+        $params = compact('data');
+        $this->getEventManager()->trigger(__FUNCTION__, $this, $params);
         return $data;
     }
 
@@ -312,7 +315,9 @@ abstract class AbstractDataGridController extends AbstractActionController
      */
     public function postSave($grid, $primary)
     {
-        return;
+    	$params = compact('grid', 'primary');
+    	$this->getEventManager()->trigger(__FUNCTION__, $this, $params);
+    	return;
     }
 
     /**

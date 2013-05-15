@@ -14,9 +14,9 @@
         }
     ],
     "require": {
-        "zendframework/zendframework": ">=2.1.4",
-        "zf-commons/zfc-admin": "dev-master",
-        "joacub/at-datagrid": "dev-master"
+        "zendframework/zendframework": "*",
+        "zf-commons/zfc-admin": "*",
+        "joacub/at-datagrid": "*"
     },
     "suggest": {
         "bjyoungblood/bjy-modulus": "For modules management",
