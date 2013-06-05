@@ -179,7 +179,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         if(!$grid->getCaption()) {
         	$title = $item;
-        	if(property_exists($grid->getTitleColumnName(), 'getParent')) {
+        	if($grid->getTitleColumnName()->getParent()) {
         		$parent = $grid->getTitleColumnName()->getParent();
         		$title = $title->{"get{$parent->getName()}"}()->{"get{$grid->getTitleColumnName()->getName()}"}();
         	} else {
