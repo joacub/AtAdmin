@@ -60,10 +60,12 @@ abstract class AbstractDataGridController extends AbstractActionController
 	        $originalTemplate = $model->getTemplate();
 	        $originalTemplateBase = dirname($originalTemplate);
 	        
+	        $gridManager->setOriginalTemplateBase($originalTemplateBase);
+	        
 	        $viewResolver = $this->getServiceLocator()->get('ViewResolver');
 	        
 	        //miramos si existe el original
-	        if(false === $viewResolver->resolve($originalTemplate))
+	        if(false === $viewResolver->resolve($originalTemplateBase . '/grid'))
 	        	$viewModel->setTemplate('at-datagrid/grid');
 
             return $viewModel;
@@ -124,9 +126,16 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $viewResolver = $this->getServiceLocator()->get('ViewResolver');
         
+        
         //miramos si existe el original
         if(false === $viewResolver->resolve($originalTemplate))
         	$viewModel->setTemplate('at-datagrid/create');
+        
+        $originalFormTemplate = dirname($originalTemplate) . '/form';
+        $viewModel->setVariable('formTemplate', $originalFormTemplate);
+        //miramos si existe el original
+        if(false === $viewResolver->resolve(dirname($originalTemplate) . '/form'))
+        	$viewModel->setVariable('formTemplate', 'at-datagrid/form');
 
         return $viewModel;
     }
