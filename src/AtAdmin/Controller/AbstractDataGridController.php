@@ -198,13 +198,11 @@ abstract class AbstractDataGridController extends AbstractActionController
         	$grid->setCaption((string) $title);
         }
         
-        
-        $serviceLocator = $this->getServiceLocator()->get('Application');
-        $routeMatch  = $serviceLocator->getMvcEvent()->getRouteMatch();
-        $router      = $serviceLocator->getMvcEvent()->getRouter();
+        $routeMatch  = $this->getEvent()->getRouteMatch();
+        $router      = $this->getEvent()->getRouter();
         $routeMatchName = $routeMatch->getMatchedRouteName();
         
-        $navigation = $this->getEvent()->getApplication()->getServiceManager()->get('viewrenderer')->getEngine()->plugin('navigation', array('navigation'));
+        $navigation = $this->getServiceLocator()->get('viewrenderer')->getEngine()->plugin('navigation', array('navigation'));
         
         $container = $navigation->setContainer('admin_navigation')->getContainer();
         $container instanceof \Zend\Navigation\Navigation;
@@ -238,7 +236,7 @@ abstract class AbstractDataGridController extends AbstractActionController
 
         //$currentPanel = $this->getRequest()->getParam('panel');
         //$this->view->panel = $currentPanel;
-
+        $this->getPluginManager()->get('backTo');
         $varsModel = array(
             'gridManager' => $gridManager,
             'item'        => $item,
