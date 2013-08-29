@@ -18,7 +18,7 @@
 
     <body>
 
-        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
                 <div class="container">
                     <div class="navbar-header">
 	                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -34,7 +34,7 @@
                                 <?php if ($item->hasPages()): ?>
                                 <li class="dropdown">
                                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                            <?php echo $this->translate($item->getLabel()) ?>
+                                            <?php echo $item->getLabel() ? $this->translate($item->getLabel()) : '' ?>
                                             <b class="caret"></b>
                                         </a>
                                         <ul class="dropdown-menu">
@@ -44,7 +44,7 @@
                                         </ul>
                                     </li>
                                 <?php else: ?>
-                                    <li><a href="<?php echo $item->getHref() ?>"><?php echo $this->translate($item->getLabel()) ?></a></li>
+                                    <li><a href="<?php echo $item->getHref() ?>"><?php echo $item->getLabel() ? $this->translate($item->getLabel()) : '' ?></a></li>
                                 <?php endif; ?>
                             <?php endforeach; ?>
                         </ul>
