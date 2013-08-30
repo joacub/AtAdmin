@@ -38,7 +38,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         if (($cmd = $this->params()->fromPost('cmd', null)) === null) {
             $requestParams = $this->getRequest()->getQuery();
 
-            $typeFilter = $this->params()->fromQuery('typeFilter');
+            $typeFilter = $this->params()->fromQuery('typeFilter', array());
             
             foreach ($typeFilter as $column => $filter) {
             	if(empty($filter))
