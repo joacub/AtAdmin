@@ -7,6 +7,7 @@ use Zend\View\Model\ViewModel;
 use AtDataGrid\DataGrid\Manager;
 use Zend\Mvc\View\Http\InjectTemplateListener;
 use Nette\Diagnostics\Debugger;
+use AtDataGrid\DataGrid\Filter\Sql\Like;
 
 abstract class AbstractDataGridController extends AbstractActionController
 {
@@ -37,6 +38,15 @@ abstract class AbstractDataGridController extends AbstractActionController
         if (($cmd = $this->params()->fromPost('cmd', null)) === null) {
             $requestParams = $this->getRequest()->getQuery();
 
+            $typeFilter = $this->params()->fromQuery('typeFilter');
+            
+            foreach ($typeFilter as $column => $filter) {
+            	if(empty($filter))
+            		continue;
+            	$filter = 'AtDataGrid\DataGrid\Filter\Sql\\' . $filter;
+            	$grid->getColumn($column)->clearFilters()->addFilter(new $filter);
+            }
+            
             $filtersForm = $grid->getFiltersForm();
             foreach($filtersForm->getElements() as $e) {
             	$inputFilter = $filtersForm->getInputFilter()->get($e->getName());
