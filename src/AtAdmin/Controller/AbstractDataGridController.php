@@ -8,6 +8,7 @@ use AtDataGrid\DataGrid\Manager;
 use Zend\Mvc\View\Http\InjectTemplateListener;
 use Nette\Diagnostics\Debugger;
 use AtDataGrid\DataGrid\Filter\Sql\Like;
+use Zend\Json\Json;
 
 abstract class AbstractDataGridController extends AbstractActionController
 {
@@ -31,7 +32,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         $gridManager = $this->getGridManager();
         $grid = $gridManager->getGrid();
 
-        $grid->setOrder($this->params()->fromQuery('order', $grid->getIdentifierColumnName().'~desc'));
+        $grid->setOrder($this->params()->fromQuery('order', Json::encode(array($grid->getIdentifierColumnName())).'~desc'));
         $grid->setCurrentPage($this->params()->fromQuery('page'));
         $grid->setItemsPerPage($this->params()->fromQuery('show_items'));
 
