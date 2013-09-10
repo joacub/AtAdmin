@@ -59,27 +59,6 @@ return array(
         ),
     ),
 
-    'navigation' => array(
-        'admin' => array(
-            'system' => array(
-                'label' => 'System',
-                'id' => 'system-page',
-                'route' => 'zfcadmin/system',
-                'order' => 100,
-                'pages' => array(
-                   /* 'modules' => array(
-                        'label' => 'Modules',
-                        'route' => 'zfcadmin/system/modules'
-                    ),*/
-                    'settings' => array(
-                        'label' => 'Settings',
-                        'route' => 'zfcadmin/system/settings'
-                    ),
-                ),
-            ),
-        ),
-    ),
-
     'view_manager' => array(
         'template_path_stack' => array(
             __DIR__ . '/../view',
