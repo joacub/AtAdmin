@@ -113,6 +113,13 @@ abstract class AbstractDataGridController extends AbstractActionController
         }
         
         $form->bind($entity);
+        
+        foreach($requestParams as $k => $param) {
+        	if(empty($requestParams[$k])) {
+        		$requestParams[$k] = null;
+        	}
+        }
+        
         $form->setData($requestParams);
 
         if ($this->getRequest()->isPost()) {
@@ -183,6 +190,12 @@ abstract class AbstractDataGridController extends AbstractActionController
         }
         
         $form->bind($item);
+        
+        foreach($requestParams as $k => $param) {
+        	if(empty($requestParams[$k])) {
+        		$requestParams[$k] = null;
+        	}
+        }
         
         $form->setData($requestParams);
         
