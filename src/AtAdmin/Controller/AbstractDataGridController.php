@@ -181,7 +181,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         $form = $gridManager->getForm();
         
         $item = $grid->getRow($itemId);
-        
+     
         if(method_exists($item, 'setLocale')) {
         	$item->setLocale($this->params()->fromQuery('locale', \Locale::getDefault()));
         	$grid->getDataSource()->getEm()->refresh($item);
@@ -208,7 +208,6 @@ abstract class AbstractDataGridController extends AbstractActionController
 
             return $this->backTo()->goBack('Record updated.');
         }
-
         
         if(!$grid->getCaption()) {
         	$title = $item;
@@ -257,7 +256,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         	$container->addPage($pages);
         }
-
+       
         //$currentPanel = $this->getRequest()->getParam('panel');
         //$this->view->panel = $currentPanel;
         $this->getPluginManager()->get('backTo');

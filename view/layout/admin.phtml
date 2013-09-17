@@ -31,6 +31,10 @@
                   <div class="collapse navbar-collapse">
                     	<ul class="nav navbar-nav">
                             <?php foreach ($this->navigation('admin_navigation')->getContainer() as $item): ?>
+                            <?php 
+                            if(!$item->getVisible())
+                            	continue;
+                            ?>
                                 <?php if ($item->hasPages()): ?>
                                 <li class="dropdown">
                                         <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -40,6 +44,8 @@
                                         <ul class="dropdown-menu">
                                             <?php foreach ($item->getPages() as $page): ?>
                                             <?php
+                                            if(!$page->getVisible())
+                                            	continue;
 											switch (true):
 												case ($page->get('navHeader')):?>
                                             <li role="presentation" class="dropdown-header"><?php echo $this->translate($page->getLabel()) ?></li>
