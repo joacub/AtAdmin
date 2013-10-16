@@ -145,7 +145,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         $form->bind($entity);
         
         foreach ($requestParams as $k => $param) {
-            if (empty($requestParams[$k])) {
+            if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
                 $requestParams[$k] = null;
             }
         }
@@ -226,7 +226,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         $form->bind($item);
         
         foreach ($requestParams as $k => $param) {
-            if (empty($requestParams[$k])) {
+            if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
                 $requestParams[$k] = null;
             }
         }
