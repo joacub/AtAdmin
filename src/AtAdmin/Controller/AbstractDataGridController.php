@@ -13,6 +13,7 @@ use AtAdmin\Entity\ColumnState;
 use Zend\View\Model\JsonModel;
 use AtDataGrid\DataGrid\Column\Column;
 use Zend\Http\PhpEnvironment\Request;
+use Gedmo\Sluggable\Util\Urlizer;
 
 abstract class AbstractDataGridController extends AbstractActionController
 {
@@ -448,16 +449,15 @@ abstract class AbstractDataGridController extends AbstractActionController
     {
         $viewModel = $this->listAction();
         
-        Debugger::dump($viewModel->getVariable('gridManager')->getGrid()->getCaption());Exit;
-        
         if($this->params()->fromQuery('exec')) {
             $request = $this->getRequest();
             $request instanceof Request;
             $url = $this->url()->fromRoute(null, array(), array('force_canonical' => true, 'query' => (array('exec' => null) + $request->getQuery()->toArray())), true);
+            $name = Urlizer::transliterate($viewModel->getVariable('gridManager')->getGrid()->getCaption());
             ob_start();
             passthru('/opt/wkhtmltopdf/bin/wkhtmltopdf '.$url.' -', $result);
             header('Content-type: application/pdf');
-            header('Content-Disposition: attachment; filename="downloaded.pdf"');
+            header('Content-Disposition: attachment; filename="'.$name.'.pdf"');
             echo ob_get_contents();
             exit;
         }
