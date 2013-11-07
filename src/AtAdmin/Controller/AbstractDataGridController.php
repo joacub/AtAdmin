@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManager;
 use AtAdmin\Entity\ColumnState;
 use Zend\View\Model\JsonModel;
 use AtDataGrid\DataGrid\Column\Column;
+use Zend\Http\PhpEnvironment\Request;
 
 abstract class AbstractDataGridController extends AbstractActionController
 {
@@ -429,6 +430,39 @@ abstract class AbstractDataGridController extends AbstractActionController
         ));
         $jsonmodel->setTerminal(true);
         return $jsonmodel;
+    }
+    
+    public function exportAction()
+    {
+        $type = strtoupper($this->params()->fromQuery('type'));
+        
+        switch ($type)
+        {
+            case 'PDF':
+                return $this->pdfExport();
+                break;
+        }
+    }
+    
+    protected function pdfExport()
+    {
+        $viewModel = $this->listAction();
+        
+        if($this->params()->fromQuery('exec')) {
+            $request = $this->getRequest();
+            $request instanceof Request;
+            $url = $this->url()->fromRoute(null, array(), array('force_canonical' => true, 'query' => (array('exec' => null) + $request->getQuery()->toArray())), true);
+            ob_start();
+            
+            passthru('wkhtmltopdf '.$url.' -');
+            
+            header('Content-type: application/pdf');
+            header('Content-Disposition: attachment; filename="downloaded.pdf"');
+            readfile('original.pdf');
+        }
+        $viewModel->setTemplate('at-datagrid/export/pdf');
+        
+        return $viewModel;
     }
 
     /**
