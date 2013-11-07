@@ -455,7 +455,7 @@ abstract class AbstractDataGridController extends AbstractActionController
             $url = $this->url()->fromRoute(null, array(), array('force_canonical' => true, 'query' => (array('exec' => null) + $request->getQuery()->toArray())), true);
             $name = Urlizer::transliterate($viewModel->getVariable('gridManager')->getGrid()->getCaption());
             ob_start();
-            passthru('/opt/wkhtmltopdf/bin/wkhtmltopdf '.$url.' -', $result);
+            passthru('wkhtmltopdf '.$url.' -', $result);
             header('Content-type: application/pdf');
             header('Content-Disposition: attachment; filename="'.$name.'.pdf"');
             echo ob_get_clean();
