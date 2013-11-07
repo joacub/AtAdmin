@@ -452,12 +452,12 @@ abstract class AbstractDataGridController extends AbstractActionController
             $request = $this->getRequest();
             $request instanceof Request;
             $url = $this->url()->fromRoute(null, array(), array('force_canonical' => true, 'query' => (array('exec' => null) + $request->getQuery()->toArray())), true);
-            
+            ob_start();
             passthru('/opt/wkhtmltopdf/bin/wkhtmltopdf '.$url.' -', $result);
-            Debugger::dump($result);Exit;
             header('Content-type: application/pdf');
             header('Content-Disposition: attachment; filename="downloaded.pdf"');
-            readfile('original.pdf');
+            echo ob_get_contents();
+            exit;
         }
         $viewModel->setTemplate('at-datagrid/export/pdf');
         
