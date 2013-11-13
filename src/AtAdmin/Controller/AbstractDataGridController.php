@@ -33,6 +33,7 @@ abstract class AbstractDataGridController extends AbstractActionController
      */
     public function listAction()
     {
+        
         if ($this->params()->fromPost('dataGridColumnState')) {
             return $this->saveColumnsStateAction();
         }
@@ -44,6 +45,30 @@ abstract class AbstractDataGridController extends AbstractActionController
         $grid = $gridManager->getGrid();
         
         $grid->getColumns();
+        
+        $recursiveApplyFilters = function($typeFilter, $columnParent = null) use($grid, &$recursiveApplyFilters) {
+            foreach ($typeFilter as $column => $filter) {
+                if (empty($filter))
+                    continue;
+        
+                if(is_array($filter)) {
+                    $recursiveApplyFilters($filter, $grid->getColumn($column));
+                    continue;
+                }
+                
+                $filter = 'AtDataGrid\DataGrid\Filter\Sql\\' . $filter;
+                if($columnParent !== null) {
+                    $columnParent->getColumn($column)
+                    ->clearFilters()
+                    ->addFilter(new $filter());
+                } else {
+                    $grid->getColumn($column)
+                    ->clearFilters()
+                    ->addFilter(new $filter());
+                }
+            }
+        };
+        
         
         $em = $grid->getDataSource()->getEm();
         
@@ -63,15 +88,7 @@ abstract class AbstractDataGridController extends AbstractActionController
             $requestParams = $this->getRequest()->getQuery();
             
             $typeFilter = $this->params()->fromQuery('typeFilter', array());
-            
-            foreach ($typeFilter as $column => $filter) {
-                if (empty($filter))
-                    continue;
-                $filter = 'AtDataGrid\DataGrid\Filter\Sql\\' . $filter;
-                $grid->getColumn($column)
-                    ->clearFilters()
-                    ->addFilter(new $filter());
-            }
+            $recursiveApplyFilters($typeFilter);
             
             $filtersForm = $grid->getFiltersForm();
             foreach ($filtersForm->getElements() as $e) {
