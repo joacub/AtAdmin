@@ -447,7 +447,13 @@ abstract class AbstractDataGridController extends AbstractActionController
     
     protected function pdfExport()
     {
+        set_time_limit (0);
+        ini_set('memory_limit','2000M');
+        
         $viewModel = $this->listAction();
+        $gridManager = $viewModel->getVariable('gridManager');
+        $gridManager instanceof Manager;
+        $gridManager->getGrid()->setItemsPerPage(-1);
         
         if($this->params()->fromQuery('exec')) {
             $request = $this->getRequest();
