@@ -14,6 +14,8 @@ use Zend\View\Model\JsonModel;
 use AtDataGrid\DataGrid\Column\Column;
 use Zend\Http\PhpEnvironment\Request;
 use Gedmo\Sluggable\Util\Urlizer;
+use AtDataGrid\DataGrid\DataSource\DoctrineDbTableGateway;
+use Gedmo\Translatable\TranslatableListener;
 
 abstract class AbstractDataGridController extends AbstractActionController
 {
@@ -154,6 +156,16 @@ abstract class AbstractDataGridController extends AbstractActionController
         $entity = new $entityClassName();
         
         if ($grid->getDataSource()->isTranslationTable()) {
+            
+            $ddtbg = $grid->getDataSource();
+            $ddtbg instanceof DoctrineDbTableGateway;
+            $listeners = $ddtbg->getEm()->getEventManager()->getListeners('postLoad');
+            foreach($listeners as $listener) {
+                if($listener instanceof TranslatableListener) {
+                    $listener->setTranslationFallback(true);
+                }
+            }
+            
             $entity->setLocale($this->params()
                 ->fromQuery('locale', \Locale::getDefault()));
             
@@ -232,14 +244,35 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $item = $grid->getRow($itemId);
         
-        if (method_exists($item, 'setLocale')) {
+        if ($grid->getDataSource()->isTranslationTable()) {
+            $ddtbg = $grid->getDataSource();
+            $ddtbg instanceof DoctrineDbTableGateway;
+            $listeners = $ddtbg->getEm()->getEventManager()->getListeners('postLoad');
+            foreach($listeners as $listener) {
+            	if($listener instanceof TranslatableListener) {
+            	    $listener->setTranslationFallback(true);
+            	}
+            }
             $item->setLocale($this->params()
                 ->fromQuery('locale', \Locale::getDefault()));
             $grid->getDataSource()
                 ->getEm()
                 ->refresh($item);
+            
             $form->bind($item);
-            $form->get('locale')->setValue($item->getLocale());
+            
+            if($form->has('locale')) {
+                $form->get('locale')->setValue($item->getLocale());
+            }
+            
+            $fieldsets = $form->getFieldsets();
+            
+            foreach($fieldsets as $fieldset) {
+                if($fieldset->has('locale')) {
+                    $fieldset->get('locale')->setValue($item->getLocale());
+                }
+            }
+            
         }
         
         $form->bind($item);
