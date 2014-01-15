@@ -14,8 +14,6 @@ use Zend\View\Model\JsonModel;
 use AtDataGrid\DataGrid\Column\Column;
 use Zend\Http\PhpEnvironment\Request;
 use Gedmo\Sluggable\Util\Urlizer;
-use AtDataGrid\DataGrid\DataSource\DoctrineDbTableGateway;
-use Gedmo\Translatable\TranslatableListener;
 
 abstract class AbstractDataGridController extends AbstractActionController
 {
@@ -156,16 +154,6 @@ abstract class AbstractDataGridController extends AbstractActionController
         $entity = new $entityClassName();
         
         if ($grid->getDataSource()->isTranslationTable()) {
-            
-            $ddtbg = $grid->getDataSource();
-            $ddtbg instanceof DoctrineDbTableGateway;
-            $listeners = $ddtbg->getEm()->getEventManager()->getListeners('postLoad');
-            foreach($listeners as $listener) {
-                if($listener instanceof TranslatableListener) {
-                    $listener->setTranslationFallback(true);
-                }
-            }
-            
             $entity->setLocale($this->params()
                 ->fromQuery('locale', \Locale::getDefault()));
             
@@ -175,11 +163,11 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $form->bind($entity);
         
-        foreach ($requestParams as $k => $param) {
-            if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
-                $requestParams[$k] = null;
-            }
-        }
+//         foreach ($requestParams as $k => $param) {
+//             if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
+//                 $requestParams[$k] = null;
+//             }
+//         }
         
         $form->setData($requestParams);
         
@@ -244,44 +232,23 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $item = $grid->getRow($itemId);
         
-        if ($grid->getDataSource()->isTranslationTable()) {
-            $ddtbg = $grid->getDataSource();
-            $ddtbg instanceof DoctrineDbTableGateway;
-            $listeners = $ddtbg->getEm()->getEventManager()->getListeners('postLoad');
-            foreach($listeners as $listener) {
-            	if($listener instanceof TranslatableListener) {
-            	    $listener->setTranslationFallback(true);
-            	}
-            }
+        if (method_exists($item, 'setLocale')) {
             $item->setLocale($this->params()
                 ->fromQuery('locale', \Locale::getDefault()));
             $grid->getDataSource()
                 ->getEm()
                 ->refresh($item);
-            
             $form->bind($item);
-            
-            if($form->has('locale')) {
-                $form->get('locale')->setValue($item->getLocale());
-            }
-            
-            $fieldsets = $form->getFieldsets();
-            
-            foreach($fieldsets as $fieldset) {
-                if($fieldset->has('locale')) {
-                    $fieldset->get('locale')->setValue($item->getLocale());
-                }
-            }
-            
+            $form->get('locale')->setValue($item->getLocale());
         }
         
         $form->bind($item);
         
-        foreach ($requestParams as $k => $param) {
-            if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
-                $requestParams[$k] = null;
-            }
-        }
+//         foreach ($requestParams as $k => $param) {
+//             if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
+//                 $requestParams[$k] = null;
+//             }
+//         }
         
         $form->setData($requestParams);
         
