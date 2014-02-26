@@ -14,6 +14,9 @@ use Zend\View\Model\JsonModel;
 use AtDataGrid\DataGrid\Column\Column;
 use Zend\Http\PhpEnvironment\Request;
 use Gedmo\Sluggable\Util\Urlizer;
+use Gedmo\Translatable\TranslatableListener;
+use Doctrine\Common\Annotations\AnnotationReader;
+use Gedmo\Mapping\Annotation\Slug;
 
 abstract class AbstractDataGridController extends AbstractActionController
 {
@@ -33,7 +36,6 @@ abstract class AbstractDataGridController extends AbstractActionController
      */
     public function listAction()
     {
-        
         if ($this->params()->fromPost('dataGridColumnState')) {
             return $this->saveColumnsStateAction();
         }
@@ -46,29 +48,29 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $grid->getColumns();
         
-        $recursiveApplyFilters = function($typeFilter, $columnParent = null) use($grid, &$recursiveApplyFilters) {
+        $recursiveApplyFilters = function ($typeFilter, $columnParent = null) use($grid, &$recursiveApplyFilters)
+        {
             foreach ($typeFilter as $column => $filter) {
                 if (empty($filter))
                     continue;
-        
-                if(is_array($filter)) {
+                
+                if (is_array($filter)) {
                     $recursiveApplyFilters($filter, $grid->getColumn($column));
                     continue;
                 }
                 
                 $filter = 'AtDataGrid\DataGrid\Filter\Sql\\' . $filter;
-                if($columnParent !== null) {
+                if ($columnParent !== null) {
                     $columnParent->getColumn($column)
-                    ->clearFilters()
-                    ->addFilter(new $filter());
+                        ->clearFilters()
+                        ->addFilter(new $filter());
                 } else {
                     $grid->getColumn($column)
-                    ->clearFilters()
-                    ->addFilter(new $filter());
+                        ->clearFilters()
+                        ->addFilter(new $filter());
                 }
             }
         };
-        
         
         $em = $grid->getDataSource()->getEm();
         
@@ -163,11 +165,30 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $form->bind($entity);
         
-//         foreach ($requestParams as $k => $param) {
-//             if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
-//                 $requestParams[$k] = null;
-//             }
-//         }
+        // foreach ($requestParams as $k => $param) {
+        // if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
+        // $requestParams[$k] = null;
+        // }
+        // }
+        
+        $reader = new AnnotationReader();
+        foreach ($requestParams as $k => $param) {
+        
+            try {
+                $refPClass = new \ReflectionProperty($grid->getDataSource()->getEntity(), $k);
+            }  catch (\Exception $e) {
+                continue;
+            }
+        
+            $propertyAnnotations = $reader->getPropertyAnnotations($refPClass);
+            foreach($propertyAnnotations as $kk => $class) {
+                if($class instanceof Slug) {
+                    if (empty($requestParams[$k])) {
+                        $requestParams[$k] = null;
+                    }
+                }
+            }
+        }
         
         $form->setData($requestParams);
         
@@ -232,6 +253,19 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $item = $grid->getRow($itemId);
         
+        $events = $grid->getDataSource()
+            ->getEm()
+            ->getEventManager()
+            ->getListeners();
+        foreach ($events as $event => $listeners) {
+            foreach ($listeners as $listener) {
+                if ($listener instanceof TranslatableListener) {
+                    $listener->setTranslatableLocale('es-ES');
+                    $listener->setPersistDefaultLocaleTranslation(true);
+                }
+            }
+        }
+        
         if (method_exists($item, 'setLocale')) {
             $item->setLocale($this->params()
                 ->fromQuery('locale', \Locale::getDefault()));
@@ -244,11 +278,29 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $form->bind($item);
         
-//         foreach ($requestParams as $k => $param) {
-//             if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
-//                 $requestParams[$k] = null;
-//             }
-//         }
+        // foreach ($requestParams as $k => $param) {
+        // if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
+        // $requestParams[$k] = null;
+        // }
+        // }
+        $reader = new AnnotationReader();
+        foreach ($requestParams as $k => $param) {
+            
+            try {
+                $refPClass = new \ReflectionProperty($grid->getDataSource()->getEntity(), $k);
+            }  catch (\Exception $e) {
+            	continue;
+            }
+            
+            $propertyAnnotations = $reader->getPropertyAnnotations($refPClass);
+            foreach($propertyAnnotations as $kk => $class) {
+            	if($class instanceof Slug) {
+            	    if (empty($requestParams[$k])) {
+            	       $requestParams[$k] = null;
+            	    }
+            	}
+            }
+        }
         
         $form->setData($requestParams);
         
@@ -380,7 +432,7 @@ abstract class AbstractDataGridController extends AbstractActionController
 
     /**
      * Hook before save row
-     * 
+     *
      * @todo : Use event here. See ZfcBase EventAwareForm
      *      
      * @param
@@ -397,7 +449,7 @@ abstract class AbstractDataGridController extends AbstractActionController
 
     /**
      * Hook after save row
-     * 
+     *
      * @todo Use event here
      *      
      * @param
@@ -424,11 +476,11 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $columns = $this->params()->fromPost('columns');
         
-        foreach((array) $columns as $column) {
+        foreach ((array) $columns as $column) {
             $entity = $repo->findOneBy(array(
                 'column' => $column['column'],
                 'user' => $this->zfcUserAuthentication()
-                ->getIdentity()
+                    ->getIdentity()
             ));
             if (! $entity)
                 $entity = new ColumnState();
@@ -449,34 +501,41 @@ abstract class AbstractDataGridController extends AbstractActionController
         $jsonmodel->setTerminal(true);
         return $jsonmodel;
     }
-    
+
     public function exportAction()
     {
         $type = strtoupper($this->params()->fromQuery('type'));
         
-        switch ($type)
-        {
+        switch ($type) {
             case 'PDF':
                 return $this->pdfExport();
                 break;
         }
     }
-    
+
     protected function pdfExport()
     {
-        set_time_limit (0);
-        ini_set('memory_limit','2000M');
+        set_time_limit(0);
+        ini_set('memory_limit', '2000M');
         
         $viewModel = $this->listAction();
         $gridManager = $viewModel->getVariable('gridManager');
         $gridManager instanceof Manager;
-        $gridManager->getGrid()->setItemsPerPage(-1);
+        $gridManager->getGrid()->setItemsPerPage(- 1);
         
-        if($this->params()->fromQuery('exec')) {
+        if ($this->params()->fromQuery('exec')) {
             $request = $this->getRequest();
             $request instanceof Request;
-            $url = $this->url()->fromRoute(null, array(), array('force_canonical' => true, 'query' => (array('exec' => null) + $request->getQuery()->toArray())), true);
-            $name = Urlizer::transliterate($viewModel->getVariable('gridManager')->getGrid()->getCaption());
+            $url = $this->url()->fromRoute(null, array(), array(
+                'force_canonical' => true,
+                'query' => (array(
+                    'exec' => null
+                ) + $request->getQuery()
+                    ->toArray())
+            ), true);
+            $name = Urlizer::transliterate($viewModel->getVariable('gridManager')
+                ->getGrid()
+                ->getCaption());
             ob_start();
             passthru('wkhtmltopdf '.$url.' -', $result);
             header('Content-type: application/pdf');
