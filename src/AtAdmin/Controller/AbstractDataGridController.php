@@ -141,7 +141,6 @@ abstract class AbstractDataGridController extends AbstractActionController
      */
     public function createAction()
     {
-        exit;
         $gridManager = $this->getGridManager();
         $grid = $gridManager->getGrid();
         
@@ -155,7 +154,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         
         $entityClassName = $grid->getDataSource()->getEntity();
         $entity = new $entityClassName();
-        
+        exit;
         if ($grid->getDataSource()->isTranslationTable()) {
             $entity->setLocale($this->params()
                 ->fromQuery('locale', \Locale::getDefault()));
