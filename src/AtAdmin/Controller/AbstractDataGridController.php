@@ -224,7 +224,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         // miramos si existe el original
         if (false === $viewResolver->resolve(dirname($originalTemplate) . '/form'))
             $viewModel->setVariable('formTemplate', 'at-datagrid/form');
-        exit;
+        
         return $viewModel;
     }
 
