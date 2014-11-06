@@ -164,8 +164,6 @@ abstract class AbstractDataGridController extends AbstractActionController
         }
         
         $form->bind($entity);
-
-        exit;
         
         // foreach ($requestParams as $k => $param) {
         // if (empty($requestParams[$k]) && (@$requestParams[$k] !== '0')) {
@@ -193,7 +191,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         }
         
         $form->setData($requestParams);
-        
+
         if ($this->getRequest()->isPost()) {
             if ($form->isValid()) {
                 $formData = $this->preSave($form);
@@ -202,7 +200,7 @@ abstract class AbstractDataGridController extends AbstractActionController
                 
                 $this->backTo()->goBack('Item creado');
             }
-        }
+        } exit;
         
         $viewModel = new ViewModel(array(
             'gridManager' => $gridManager
