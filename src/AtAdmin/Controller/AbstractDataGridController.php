@@ -141,6 +141,7 @@ abstract class AbstractDataGridController extends AbstractActionController
      */
     public function createAction()
     {
+        exit;
         $gridManager = $this->getGridManager();
         $grid = $gridManager->getGrid();
         
