@@ -200,7 +200,7 @@ abstract class AbstractDataGridController extends AbstractActionController
                 
                 $this->backTo()->goBack('Item creado');
             }
-        } exit;
+        }
         
         $viewModel = new ViewModel(array(
             'gridManager' => $gridManager
@@ -212,7 +212,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         $model = $this->getEvent()->getResult();
         $originalTemplate = $model->getTemplate();
         $originalTemplateBase = dirname($originalTemplate);
-        
+        exit;
         $viewResolver = $this->getServiceLocator()->get('ViewResolver');
         
         // miramos si existe el original
