@@ -326,6 +326,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         }
 
         var_dump($form->getMessages());
+        exit;
         
         if (! $grid->getCaption()) {
             $title = $item;
