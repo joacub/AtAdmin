@@ -167,6 +167,11 @@ abstract class AbstractDataGridController extends AbstractActionController
             
             // hacemos esto por si no esta definida la columna locale dentro de la entidad y es una referencia inexistente utilizada internamente
             $form->get('locale')->setValue($entity->getLocale());
+        } else {
+            if($form->has('locale')) {
+                $form->getInputFilter()->remove('locale');
+                $form->remove('locale');
+            }
         }
         
         $form->bind($entity);
@@ -206,6 +211,7 @@ abstract class AbstractDataGridController extends AbstractActionController
                 
                 $this->backTo()->goBack('Item creado');
             }
+
         }
         
         $viewModel = new ViewModel(array(
@@ -287,7 +293,24 @@ abstract class AbstractDataGridController extends AbstractActionController
             $form->bind($item);
             $form->get('locale')->setValue($item->getLocale());
         } else {
-            $form->get('locale')->setValue(\Locale::getDefault());
+            $em = $grid->getDataSource()->getEm();
+            /**
+             * @var EntityManager $em
+             */
+
+            foreach ($events as $event => $listeners) {
+                foreach ($listeners as $listener) {
+                    if ($listener instanceof TranslatableListener) {
+                        $em->getEventManager()->removeEventListener($event, $listener);
+                    }
+                }
+            }
+
+
+            if($form->has('locale')) {
+                $form->getInputFilter()->remove('locale');
+                $form->remove('locale');
+            }
         }
         
         $form->bind($item);
