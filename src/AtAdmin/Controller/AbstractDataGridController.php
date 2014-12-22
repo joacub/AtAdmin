@@ -305,7 +305,6 @@ abstract class AbstractDataGridController extends AbstractActionController
                 }
             }
 
-
             if($form->has('locale')) {
                 $form->getInputFilter()->remove('locale');
                 $form->remove('locale');
