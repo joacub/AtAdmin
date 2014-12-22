@@ -340,6 +340,8 @@ abstract class AbstractDataGridController extends AbstractActionController
             
             $grid->setCaption((string) $title);
         }
+
+        var_dump($form->getMessages());exit;
         
         $routeMatch = $this->getEvent()->getRouteMatch();
         $router = $this->getEvent()->getRouter();
