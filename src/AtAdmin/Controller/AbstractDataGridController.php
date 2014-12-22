@@ -297,7 +297,6 @@ abstract class AbstractDataGridController extends AbstractActionController
             /**
              * @var EntityManager $em
              */
-
             foreach ($events as $event => $listeners) {
                 foreach ($listeners as $listener) {
                     if ($listener instanceof TranslatableListener) {
