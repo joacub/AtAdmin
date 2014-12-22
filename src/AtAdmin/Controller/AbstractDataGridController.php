@@ -287,9 +287,7 @@ abstract class AbstractDataGridController extends AbstractActionController
             $form->bind($item);
             $form->get('locale')->setValue($item->getLocale());
         } else {
-            if($form->has('locale')) {
-                $form->remove('locale');
-            }
+            $form->get('locale')->setValue($item->getLocale());
         }
         
         $form->bind($item);
@@ -340,9 +338,6 @@ abstract class AbstractDataGridController extends AbstractActionController
             
             $grid->setCaption((string) $title);
         }
-
-        
-        var_dump($form->getMessages());exit;
         
         $routeMatch = $this->getEvent()->getRouteMatch();
         $router = $this->getEvent()->getRouter();
