@@ -324,6 +324,8 @@ abstract class AbstractDataGridController extends AbstractActionController
             
             return $this->backTo()->goBack('Record updated.');
         }
+
+        var_dump($form->getMessages());
         
         if (! $grid->getCaption()) {
             $title = $item;
