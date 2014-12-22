@@ -156,7 +156,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         $entity = new $entityClassName();
 
         try {
-            $detector = $this->sm->getServiceLocator()->get('SlmLocale\Locale\Detector');
+            $detector = $this->getServiceLocator()->get('SlmLocale\Locale\Detector');
         } catch (\Exception $e) {
             $detector = false;
         }
@@ -273,7 +273,7 @@ abstract class AbstractDataGridController extends AbstractActionController
         }
 
         try {
-            $detector = $this->sm->getServiceLocator()->get('SlmLocale\Locale\Detector');
+            $detector = $this->getServiceLocator()->get('SlmLocale\Locale\Detector');
         } catch (\Exception $e) {
             $detector = false;
         }
