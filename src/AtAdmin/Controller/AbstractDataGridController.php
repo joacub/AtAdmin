@@ -155,7 +155,13 @@ abstract class AbstractDataGridController extends AbstractActionController
         $entityClassName = $grid->getDataSource()->getEntity();
         $entity = new $entityClassName();
 
-        if ($grid->getDataSource()->isTranslationTable()) {
+        try {
+            $detector = $this->sm->getServiceLocator()->get('SlmLocale\Locale\Detector');
+        } catch (\Exception $e) {
+            $detector = false;
+        }
+
+        if ($grid->getDataSource()->isTranslationTable() && $detector && count($detector->getSupported()) > 1) {
             $entity->setLocale($this->params()
                 ->fromQuery('locale', \Locale::getDefault()));
             
@@ -265,8 +271,14 @@ abstract class AbstractDataGridController extends AbstractActionController
                 }
             }
         }
-        
-        if (method_exists($item, 'setLocale')) {
+
+        try {
+            $detector = $this->sm->getServiceLocator()->get('SlmLocale\Locale\Detector');
+        } catch (\Exception $e) {
+            $detector = false;
+        }
+
+        if (method_exists($item, 'setLocale') && $detector && count($detector->getSupported()) > 1) {
             $item->setLocale($this->params()
                 ->fromQuery('locale', \Locale::getDefault()));
             $grid->getDataSource()
