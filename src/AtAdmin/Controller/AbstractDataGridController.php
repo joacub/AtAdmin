@@ -286,6 +286,10 @@ abstract class AbstractDataGridController extends AbstractActionController
                 ->refresh($item);
             $form->bind($item);
             $form->get('locale')->setValue($item->getLocale());
+        } else {
+            if($form->has('locale')) {
+                $form->remove('locale');
+            }
         }
         
         $form->bind($item);
@@ -324,9 +328,6 @@ abstract class AbstractDataGridController extends AbstractActionController
             
             return $this->backTo()->goBack('Record updated.');
         }
-
-        var_dump($form->getMessages());
-        exit;
         
         if (! $grid->getCaption()) {
             $title = $item;
