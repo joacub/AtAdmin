@@ -287,7 +287,7 @@ abstract class AbstractDataGridController extends AbstractActionController
             $form->bind($item);
             $form->get('locale')->setValue($item->getLocale());
         } else {
-            $form->get('locale')->setValue($item->getLocale());
+            $form->get('locale')->setValue(\Locale::getDefault());
         }
         
         $form->bind($item);
