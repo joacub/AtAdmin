@@ -1,6 +1,7 @@
 <?php
 namespace AtAdmin\Controller;
 
+use SlmLocale\Locale\Detector;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use AtDataGrid\DataGrid\Manager;
@@ -264,7 +265,26 @@ abstract class AbstractDataGridController extends AbstractActionController
         $form = $gridManager->getForm();
         
         $item = $grid->getRow($itemId);
+
+        $defaultLang = str_replace('_', '-', \Locale::getDefault());
         
+        try {
+            $detector = $this->getServiceLocator()->get('SlmLocale\Locale\Detector');
+            $configSlm = $this->getServiceLocator()->get('config');
+            $configSlm = $configSlm['slm_locale'];
+            /**
+             * @var $detector Detector
+             */
+
+            if(isset($configSlm['aliases'][$detector->getDefault()])) {
+                $defaultLang = $configSlm['aliases'][$detector->getDefault()];
+            } else {
+                $defaultLang = $detector->getDefault();
+            }
+        } catch (\Exception $e) {
+            $detector = false;
+        }
+
         $events = $grid->getDataSource()
             ->getEm()
             ->getEventManager()
@@ -272,16 +292,10 @@ abstract class AbstractDataGridController extends AbstractActionController
         foreach ($events as $event => $listeners) {
             foreach ($listeners as $listener) {
                 if ($listener instanceof TranslatableListener) {
-                    $listener->setTranslatableLocale('es-ES');
+                    $listener->setTranslatableLocale($defaultLang);
                     $listener->setPersistDefaultLocaleTranslation(true);
                 }
             }
-        }
-
-        try {
-            $detector = $this->getServiceLocator()->get('SlmLocale\Locale\Detector');
-        } catch (\Exception $e) {
-            $detector = false;
         }
 
         if (method_exists($item, 'setLocale') && $detector && count($detector->getSupported()) > 1) {
